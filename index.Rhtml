@@ -1,7 +1,7 @@
 <!DOCTYPE html>
 <html>
 <head>
-  <title>A minimal knitr example in HTML</title>
+  <title>Course Project for Practical Machine Learning</title>
 </head>
 <body>
 <!--begin.rcode
@@ -9,56 +9,66 @@
   opts_chunk$set(fig.width=5, fig.height=5)
   end.rcode-->
 
-  <p>This is a minimal example which shows <strong>knitr</strong>
-  working with HTML
-  pages. See <a href="https://bitbucket.org/stat/knitr/downloads/003-minimal.html">here</a>
-  for the output and
-  <a href="https://github.com/yihui/knitr-examples/blob/master/003-minimal.Rhtml">here</a>
-  for the source.</p>
+  <p>This is the course project for <a href="https://class.coursera.org/predmachlearn-006">Coursera Practical Machine Learning</a>.
+  </p>
+  <p>Initialize random number and load training data:</p>
 
-  <p>Boring stuff as usual:</p>
-
-<!--begin.rcode
-    ## a simple calculator
-    1+1
-    ## boring random numbers
-    set.seed(123)
-    rnorm(5)
+<!--begin.rcode initialize
+    library(caret)
+    ## set seed
+    set.seed(32343)
+    wle_data <- read.csv("data/pml-training.csv")
     end.rcode-->
 
-  <p>We can also produce plots (centered by the
-  option <code>fig.align='center'</code>):</p>
-
-<!--begin.rcode html-cars-scatter, message=FALSE, fig.align='center'
-    library(ggplot2)
-    plot(mpg~hp, mtcars)
-    qplot(hp, mpg, data=mtcars)+geom_smooth()
+  <p>Remove near zero vars and NAs.</p>
+<!--begin.rcode cleanup
+    predictors <- colnames(wle_data)
+    predictors <- predictors[colSums(is.na(wle_data)) == 0]
+    predictors <- predictors[-(1:7)]
+    nsv <- nearZeroVar(wle_data[, predictors])
+    predictors <- predictors[-nsv]
+    predictors
     end.rcode-->
 
-  <p>Errors, messages and warnings can be put into <code>div</code>'s
-  with different <code>class</code>es:</p>
-
-<!--begin.rcode
-    sqrt(-1)  # warning
-    message('knitr says hello to HTML!')
-    1+'a'  # mission impossible
+  <p>Split into training and testing data sets.</p>
+<!--begin.rcode splitting
+    inTrain <- createDataPartition(y=wle_data$classe,
+                              p=0.75, list=FALSE)
+    training <- wle_data[inTrain, predictors]
+    testing <- wle_data[-inTrain, predictors]
     end.rcode-->
 
-  <p>In the end, let's show off a 3D plot from
-  the <strong>rgl</strong> package.</p>
-
-<!--begin.rcode
-    library(rgl)
-    knit_hooks$set(rgl = hook_rgl)  # set up the hook first
+  <p>Decision Tree.</p>
+<!--begin.rcode tree, fig.align='center'
+    modeltree <- train(classe ~., data=training, method="rpart")
+    modeltree
+    modeltree$finalModel
+    predictions <- predict(modeltree, newdata=testing)
+    plot(confusionMatrix(predictions, testing$classe)$table)
     end.rcode-->
 
-<!--begin.rcode fancy-rgl, rgl=TRUE, fig.align='center', fig.width=4, fig.height=4, warning=FALSE
-    demo('bivar', package='rgl', echo=FALSE)
-    par3d(zoom=.7)
+<!--begin.rcode tree-plot, message=FALSE, fig.align='center'
+    library(rattle)
+    fancyRpartPlot(modeltree$finalModel)
     end.rcode-->
 
-  <p>Well, everything seems to be working. Let's ask R what is the
-  value of &pi;? Of course it is <!--rinline pi -->.</p>
+    <p>Linear discriminant analysis.</p>
+<!--begin.rcode lda, fig.align='center'
+    modellda <- train(classe ~., data=training, method="lda")
+    modellda
+    modellda$finalModel
+    predictions <- predict(modellda, newdata=testing)
+    plot(confusionMatrix(predictions, testing$classe)$table)
+    end.rcode-->
 
+  <p>Principal Component Analysis.</p>
+<!--begin.rcode pca
+    end.rcode-->
+
+<p>
+Velloso, E.; Bulling, A.; Gellersen, H.; Ugulino, W.; Fuks, H. Qualitative Activity Recognition of Weight Lifting Exercises. Proceedings of 4th International Conference in Cooperation with SIGCHI (Augmented Human '13) . Stuttgart, Germany: ACM SIGCHI, 2013.
+
+Read more: http://groupware.les.inf.puc-rio.br/har#weight_lifting_exercises#ixzz3Gx4pWyLd
+</p>
 </body>
 </html>
