@@ -1,0 +1,167 @@
+<!DOCTYPE html>
+<html>
+<head>
+<style type="text/css">
+.knitr.inline {
+  background-color: #f7f7f7;
+  border:solid 1px #B0B0B0;
+}
+.error {
+	font-weight: bold;
+	color: #FF0000;
+},
+.warning {
+	font-weight: bold;
+}
+.message {
+	font-style: italic;
+}
+.source, .output, .warning, .error, .message {
+	padding: 0em 1em;
+  border:solid 1px #F7F7F7;
+}
+.source {
+  background-color: #f5f5f5;
+}
+.rimage.left {
+  text-align: left;
+}
+.rimage.right {
+  text-align: right;
+}
+.rimage.center {
+  text-align: center;
+}
+.hl.num {
+  color: #AF0F91;
+}
+.hl.str {
+  color: #317ECC;
+}
+.hl.com {
+  color: #AD95AF;
+  font-style: italic;
+}
+.hl.opt {
+  color: #000000;
+}
+.hl.std {
+  color: #585858;
+}
+.hl.kwa {
+  color: #295F94;
+  font-weight: bold;
+}
+.hl.kwb {
+  color: #B05A65;
+}
+.hl.kwc {
+  color: #55aa55;
+}
+.hl.kwd {
+  color: #BC5A65;
+  font-weight: bold;
+}
+</style>
+  <title>Course Project for Practical Machine Learning</title>
+</head>
+<body>
+<div class="chunk" id="unnamed-chunk-1"><div class="rcode"><div class="source"><pre class="knitr r">  <span class="hl kwd">library</span><span class="hl std">(knitr)</span>
+  <span class="hl std">opts_chunk</span><span class="hl opt">$</span><span class="hl kwd">set</span><span class="hl std">(</span><span class="hl kwc">fig.width</span><span class="hl std">=</span><span class="hl num">5</span><span class="hl std">,</span> <span class="hl kwc">fig.height</span><span class="hl std">=</span><span class="hl num">5</span><span class="hl std">)</span>
+</pre></div>
+</div></div>
+
+  <p>This is the course project for <a href="https://class.coursera.org/predmachlearn-006">Coursera Practical Machine Learning</a>.
+  </p>
+  <p>Initialize random number and load training data:</p>
+
+<div class="chunk" id="initialize"><div class="rcode"><div class="source"><pre class="knitr r">    <span class="hl kwd">library</span><span class="hl std">(caret)</span>
+    <span class="hl com">## set seed</span>
+    <span class="hl kwd">set.seed</span><span class="hl std">(</span><span class="hl num">32343</span><span class="hl std">)</span>
+    <span class="hl std">wle_data</span> <span class="hl kwb">&lt;-</span> <span class="hl kwd">read.csv</span><span class="hl std">(</span><span class="hl str">&quot;data/pml-training.csv&quot;</span><span class="hl std">)</span>
+</pre></div>
+</div></div>
+
+  <p>
+  <h3>Data Cleanup</h3>
+  Removing zero vars and NAs.
+  </p>
+<div class="chunk" id="cleanup"><div class="rcode"><div class="source"><pre class="knitr r">    <span class="hl std">predictors</span> <span class="hl kwb">&lt;-</span> <span class="hl kwd">colnames</span><span class="hl std">(wle_data)</span>
+    <span class="hl std">predictors</span> <span class="hl kwb">&lt;-</span> <span class="hl std">predictors[</span><span class="hl kwd">colSums</span><span class="hl std">(</span><span class="hl kwd">is.na</span><span class="hl std">(wle_data))</span> <span class="hl opt">==</span> <span class="hl num">0</span><span class="hl std">]</span>
+    <span class="hl std">predictors</span> <span class="hl kwb">&lt;-</span> <span class="hl std">predictors[</span><span class="hl opt">-</span><span class="hl std">(</span><span class="hl num">1</span><span class="hl opt">:</span><span class="hl num">7</span><span class="hl std">)]</span>
+    <span class="hl std">nsv</span> <span class="hl kwb">&lt;-</span> <span class="hl kwd">nearZeroVar</span><span class="hl std">(wle_data[, predictors])</span>
+    <span class="hl std">predictors</span> <span class="hl kwb">&lt;-</span> <span class="hl std">predictors[</span><span class="hl opt">-</span><span class="hl std">nsv]</span>
+    <span class="hl std">predictors</span>
+</pre></div>
+<div class="output"><pre class="knitr r">##  [1] "roll_belt"            "pitch_belt"           "yaw_belt"            
+##  [4] "total_accel_belt"     "gyros_belt_x"         "gyros_belt_y"        
+##  [7] "gyros_belt_z"         "accel_belt_x"         "accel_belt_y"        
+## [10] "accel_belt_z"         "magnet_belt_x"        "magnet_belt_y"       
+## [13] "magnet_belt_z"        "roll_arm"             "pitch_arm"           
+## [16] "yaw_arm"              "total_accel_arm"      "gyros_arm_x"         
+## [19] "gyros_arm_y"          "gyros_arm_z"          "accel_arm_x"         
+## [22] "accel_arm_y"          "accel_arm_z"          "magnet_arm_x"        
+## [25] "magnet_arm_y"         "magnet_arm_z"         "roll_dumbbell"       
+## [28] "pitch_dumbbell"       "yaw_dumbbell"         "total_accel_dumbbell"
+## [31] "gyros_dumbbell_x"     "gyros_dumbbell_y"     "gyros_dumbbell_z"    
+## [34] "accel_dumbbell_x"     "accel_dumbbell_y"     "accel_dumbbell_z"    
+## [37] "magnet_dumbbell_x"    "magnet_dumbbell_y"    "magnet_dumbbell_z"   
+## [40] "roll_forearm"         "pitch_forearm"        "yaw_forearm"         
+## [43] "total_accel_forearm"  "gyros_forearm_x"      "gyros_forearm_y"     
+## [46] "gyros_forearm_z"      "accel_forearm_x"      "accel_forearm_y"     
+## [49] "accel_forearm_z"      "magnet_forearm_x"     "magnet_forearm_y"    
+## [52] "magnet_forearm_z"     "classe"
+</pre></div>
+<div class="source"><pre class="knitr r">    <span class="hl std">classes</span> <span class="hl kwb">&lt;-</span> <span class="hl kwd">unique</span><span class="hl std">(wle_data</span><span class="hl opt">$</span><span class="hl std">classe)</span>
+</pre></div>
+</div></div>
+
+  <p>
+  <h3>Data Partitioning</h3>
+  Split into training and testing data sets.
+  </p>
+<div class="chunk" id="splitting"><div class="rcode"><div class="source"><pre class="knitr r">    <span class="hl std">inTrain</span> <span class="hl kwb">&lt;-</span> <span class="hl kwd">createDataPartition</span><span class="hl std">(</span><span class="hl kwc">y</span><span class="hl std">=wle_data</span><span class="hl opt">$</span><span class="hl std">classe,</span>
+                              <span class="hl kwc">p</span><span class="hl std">=</span><span class="hl num">0.75</span><span class="hl std">,</span> <span class="hl kwc">list</span><span class="hl std">=</span><span class="hl num">FALSE</span><span class="hl std">)</span>
+    <span class="hl std">training</span> <span class="hl kwb">&lt;-</span> <span class="hl std">wle_data[inTrain, predictors]</span>
+    <span class="hl std">testing</span> <span class="hl kwb">&lt;-</span> <span class="hl std">wle_data[</span><span class="hl opt">-</span><span class="hl std">inTrain, predictors]</span>
+</pre></div>
+</div></div>
+
+  <p>
+  <h3>First Attempt: Decision Tree</h3>
+  </p>
+<div class="chunk" id="tree"><div class="rcode"><div class="source"><pre class="knitr r">    <span class="hl std">modeltree</span> <span class="hl kwb">&lt;-</span> <span class="hl kwd">train</span><span class="hl std">(classe</span> <span class="hl opt">~</span><span class="hl std">.,</span> <span class="hl kwc">data</span><span class="hl std">=training,</span> <span class="hl kwc">method</span><span class="hl std">=</span><span class="hl str">&quot;rpart&quot;</span><span class="hl std">)</span>
+    <span class="hl kwd">library</span><span class="hl std">(rattle)</span>
+    <span class="hl kwd">fancyRpartPlot</span><span class="hl std">(modeltree</span><span class="hl opt">$</span><span class="hl std">finalModel)</span>
+</pre></div>
+</div><div class="rimage center"><img src="figure/tree1.png" title="plot of chunk tree" alt="plot of chunk tree" class="plot" /></div><div class="rcode">
+<div class="source"><pre class="knitr r">    <span class="hl std">predictions</span> <span class="hl kwb">&lt;-</span> <span class="hl kwd">predict</span><span class="hl std">(modeltree,</span> <span class="hl kwc">newdata</span><span class="hl std">=testing)</span>
+    <span class="hl kwd">plot</span><span class="hl std">(</span><span class="hl kwd">confusionMatrix</span><span class="hl std">(predictions, testing</span><span class="hl opt">$</span><span class="hl std">classe)</span><span class="hl opt">$</span><span class="hl std">table,</span> <span class="hl kwc">col</span> <span class="hl std">=</span> <span class="hl num">1</span> <span class="hl opt">+</span> <span class="hl kwd">as.integer</span><span class="hl std">(classes))</span>
+</pre></div>
+</div><div class="rimage center"><img src="figure/tree2.png" title="plot of chunk tree" alt="plot of chunk tree" class="plot" /></div></div>
+
+  <p>
+  <h3>Second Attempt: Linear Discriminant Analysis</h3>
+  </p>
+<div class="chunk" id="lda"><div class="rcode"><div class="source"><pre class="knitr r">    <span class="hl std">modellda</span> <span class="hl kwb">&lt;-</span> <span class="hl kwd">train</span><span class="hl std">(classe</span> <span class="hl opt">~</span><span class="hl std">.,</span> <span class="hl kwc">data</span><span class="hl std">=training,</span> <span class="hl kwc">method</span><span class="hl std">=</span><span class="hl str">&quot;lda&quot;</span><span class="hl std">)</span>
+</pre></div>
+<div class="message"><pre class="knitr r">## Loading required package: MASS
+</pre></div>
+<div class="source"><pre class="knitr r">    <span class="hl std">predictions</span> <span class="hl kwb">&lt;-</span> <span class="hl kwd">predict</span><span class="hl std">(modellda,</span> <span class="hl kwc">newdata</span><span class="hl std">=testing)</span>
+    <span class="hl kwd">plot</span><span class="hl std">(</span><span class="hl kwd">confusionMatrix</span><span class="hl std">(predictions, testing</span><span class="hl opt">$</span><span class="hl std">classe)</span><span class="hl opt">$</span><span class="hl std">table,</span> <span class="hl kwc">col</span> <span class="hl std">=</span> <span class="hl num">1</span> <span class="hl opt">+</span> <span class="hl kwd">as.integer</span><span class="hl std">(classes))</span>
+</pre></div>
+</div><div class="rimage center"><img src="figure/lda.png" title="plot of chunk lda" alt="plot of chunk lda" class="plot" /></div></div>
+
+  <p>
+  <h3>Principal Component Analysis</h3>
+  </p>
+
+
+<p>
+<h3>References</h3>
+Velloso, E.; Bulling, A.; Gellersen, H.; Ugulino, W.; Fuks, H. Qualitative Activity Recognition of Weight Lifting Exercises. Proceedings of 4th International Conference in Cooperation with SIGCHI (Augmented Human '13) . Stuttgart, Germany: ACM SIGCHI, 2013.
+
+Read more: http://groupware.les.inf.puc-rio.br/har#weight_lifting_exercises#ixzz3Gx4pWyLd
+</p>
+</body>
+</html>

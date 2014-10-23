@@ -1,0 +1,81 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <title>Course Project for Practical Machine Learning</title>
+</head>
+<body>
+<!--begin.rcode, message=FALSE
+  library(knitr)
+  opts_chunk$set(fig.width=5, fig.height=5)
+  end.rcode-->
+
+  <p>This is the course project for <a href="https://class.coursera.org/predmachlearn-006">Coursera Practical Machine Learning</a>.
+  </p>
+  <p>Initialize random number and load training data:</p>
+
+<!--begin.rcode initialize, message=FALSE
+    library(caret)
+    ## set seed
+    set.seed(32343)
+    wle_data <- read.csv("data/pml-training.csv")
+    end.rcode-->
+
+  <p>
+  <h3>Data Cleanup</h3>
+  Removing zero vars and NAs.
+  </p>
+<!--begin.rcode cleanup, message=FALSE
+    predictors <- colnames(wle_data)
+    predictors <- predictors[colSums(is.na(wle_data)) == 0]
+    predictors <- predictors[-(1:7)]
+    nsv <- nearZeroVar(wle_data[, predictors])
+    predictors <- predictors[-nsv]
+    predictors
+    classes <- unique(wle_data$classe)
+    end.rcode-->
+
+  <p>
+  <h3>Data Partitioning</h3>
+  Split into training and testing data sets.
+  </p>
+<!--begin.rcode splitting, message=FALSE
+    inTrain <- createDataPartition(y=wle_data$classe,
+                              p=0.75, list=FALSE)
+    training <- wle_data[inTrain, predictors]
+    testing <- wle_data[-inTrain, predictors]
+    end.rcode-->
+
+  <p>
+  <h3>First Attempt: Decision Tree</h3>
+  </p>
+<!--begin.rcode tree, message=FALSE, fig.align='center'
+    modeltree <- train(classe ~., data=training, method="rpart")
+    library(rattle)
+    fancyRpartPlot(modeltree$finalModel)
+    predictions <- predict(modeltree, newdata=testing)
+    plot(confusionMatrix(predictions, testing$classe)$table, col = 1 + as.integer(classes))
+    end.rcode-->
+
+  <p>
+  <h3>Second Attempt: Linear Discriminant Analysis</h3>
+  </p>
+<!--begin.rcode lda, fig.align='center'
+    modellda <- train(classe ~., data=training, method="lda")
+    predictions <- predict(modellda, newdata=testing)
+    plot(confusionMatrix(predictions, testing$classe)$table, col = 1 + as.integer(classes))
+    end.rcode-->
+
+  <p>
+  <h3>Principal Component Analysis</h3>
+  </p>
+<!--begin.rcode pca
+    end.rcode-->
+
+<p>
+<h3>References</h3>
+Velloso, E.; Bulling, A.; Gellersen, H.; Ugulino, W.; Fuks, H. Qualitative Activity Recognition of Weight Lifting Exercises. Proceedings of 4th International Conference in Cooperation with SIGCHI (Augmented Human '13) . Stuttgart, Germany: ACM SIGCHI, 2013.
+
+Read more: http://groupware.les.inf.puc-rio.br/har#weight_lifting_exercises#ixzz3Gx4pWyLd
+</p>
+</body>
+</html>
