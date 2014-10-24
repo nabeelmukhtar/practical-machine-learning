@@ -111,14 +111,17 @@ body, td {
 
   <p>
   <h3>Final Attempt: Ensemble Classifier</h3>
-  Moving on we decided to build an ensemble of the first three classifiers with voting to see if it further improves the accuracy. The following R code shows a simple attempt at voting of classifiers. Unfortunately the accuracy was 81%, much lower than that of GBM.
+  Moving on we decided to build an ensemble of the first three classifiers by stacking them with random forest to see if it further improves the accuracy. Unfortunately the accuracy was still 96% with a slight improvement in the accuracy of class E.
   </p>
 <!--begin.rcode ensemble, message=FALSE, fig.align='center', results='asis'
-    predtest <- data.frame(predicttree, predictgbm, predictlda, classe = testing$classe)
-    combmod <- train(classe ~ ., data = predtest, method = "rf")
-    predvalidation <- data.frame(predicttree = predict(modeltree, newdata=validation), predictgbm = predict(modelgbm, newdata=validation), predictlda = predict(modellda, newdata=validation), classe = validation$classe)
-    combpred <- predict(combmod, predvalidation)
-    cmensemble <- confusionMatrix(combpred, validation$classe)
+    predicttesting <- data.frame(predicttree, predictgbm, predictlda, classe = testing$classe)
+    modelensemble <- train(classe ~ ., data = predicttesting, method = "rf")
+    predictvalidation <- data.frame(predicttree = predict(modeltree, newdata=validation),
+                                 predictgbm = predict(modelgbm, newdata=validation),
+                                 predictlda = predict(modellda, newdata=validation),
+                                 classe = validation$classe)
+    predictensemble <- predict(modelensemble, predictvalidation)
+    cmensemble <- confusionMatrix(predictensemble, validation$classe)
     plot(cmensemble$table, col = 1 + as.integer(classes), main = paste("Ensemble Confusion Matrix: Accuracy=", round(cmensemble$overall['Accuracy'], 2)))
     kable(cmensemble$byClass, digits = 2, caption = "Per Class Metrics")
     end.rcode-->
