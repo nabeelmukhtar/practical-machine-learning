@@ -402,17 +402,11 @@ body, td {
   <h3>Final Attempt: Ensemble Classifier</h3>
   Moving on we decided to build an ensemble of the first three classifiers with voting to see if it further improves the accuracy. The following R code shows a simple attempt at voting of classifiers. Unfortunately the accuracy was 81%, much lower than that of GBM.
   </p>
-<div class="source"><pre class="knitr r">    <span class="hl std">models</span> <span class="hl kwb">&lt;-</span> <span class="hl kwd">list</span><span class="hl std">(modeltree, modellda, modelgbm)</span>
-    <span class="hl std">predictions</span> <span class="hl kwb">&lt;-</span> <span class="hl kwd">as.data.frame</span><span class="hl std">(</span><span class="hl kwd">do.call</span><span class="hl std">(cbind,</span> <span class="hl kwd">lapply</span><span class="hl std">(models,</span> <span class="hl kwc">FUN</span> <span class="hl std">=</span> <span class="hl kwa">function</span><span class="hl std">(</span><span class="hl kwc">model</span><span class="hl std">) {</span>
-      <span class="hl kwd">return</span><span class="hl std">(</span><span class="hl kwd">as.character</span><span class="hl std">(</span><span class="hl kwd">predict</span><span class="hl std">(model,</span> <span class="hl kwc">newdata</span><span class="hl std">=validation)))</span>
-    <span class="hl std">})))</span>
-    <span class="hl kwd">colnames</span><span class="hl std">(predictions)</span> <span class="hl kwb">&lt;-</span> <span class="hl kwd">c</span><span class="hl std">(</span><span class="hl str">&quot;predicttree&quot;</span><span class="hl std">,</span> <span class="hl str">&quot;predictlda&quot;</span><span class="hl std">,</span> <span class="hl str">&quot;predictgbm&quot;</span><span class="hl std">)</span>
-    <span class="hl std">predictensemble</span> <span class="hl kwb">&lt;-</span> <span class="hl kwd">apply</span><span class="hl std">(predictions,</span> <span class="hl kwc">MARGIN</span> <span class="hl std">=</span> <span class="hl num">1</span><span class="hl std">,</span> <span class="hl kwc">FUN</span> <span class="hl std">=</span> <span class="hl kwa">function</span><span class="hl std">(</span><span class="hl kwc">x</span><span class="hl std">) {</span>
-        <span class="hl std">t</span> <span class="hl kwb">&lt;-</span> <span class="hl kwd">table</span><span class="hl std">(</span><span class="hl kwd">t</span><span class="hl std">(x))</span>
-              <span class="hl std">t.max</span> <span class="hl kwb">&lt;-</span> <span class="hl kwd">max</span><span class="hl std">(t)</span>
-              <span class="hl kwd">return</span><span class="hl std">(</span><span class="hl kwd">as.character</span><span class="hl std">(</span><span class="hl kwd">names</span><span class="hl std">(t[t</span> <span class="hl opt">==</span> <span class="hl std">t.max])[</span><span class="hl num">1</span><span class="hl std">]))</span>
-    <span class="hl std">})</span>
-    <span class="hl std">cmensemble</span> <span class="hl kwb">&lt;-</span> <span class="hl kwd">confusionMatrix</span><span class="hl std">(predictensemble, validation</span><span class="hl opt">$</span><span class="hl std">classe)</span>
+<div class="source"><pre class="knitr r">    <span class="hl std">predtest</span> <span class="hl kwb">&lt;-</span> <span class="hl kwd">data.frame</span><span class="hl std">(predicttree, predictgbm, predictlda,</span> <span class="hl kwc">classe</span> <span class="hl std">= testing</span><span class="hl opt">$</span><span class="hl std">classe)</span>
+    <span class="hl std">combmod</span> <span class="hl kwb">&lt;-</span> <span class="hl kwd">train</span><span class="hl std">(classe</span> <span class="hl opt">~</span> <span class="hl std">.,</span> <span class="hl kwc">data</span> <span class="hl std">= predtest,</span> <span class="hl kwc">method</span> <span class="hl std">=</span> <span class="hl str">&quot;rf&quot;</span><span class="hl std">)</span>
+    <span class="hl std">predvalidation</span> <span class="hl kwb">&lt;-</span> <span class="hl kwd">data.frame</span><span class="hl std">(</span><span class="hl kwc">predicttree</span> <span class="hl std">=</span> <span class="hl kwd">predict</span><span class="hl std">(modeltree,</span> <span class="hl kwc">newdata</span><span class="hl std">=validation),</span> <span class="hl kwc">predictgbm</span> <span class="hl std">=</span> <span class="hl kwd">predict</span><span class="hl std">(modelgbm,</span> <span class="hl kwc">newdata</span><span class="hl std">=validation),</span> <span class="hl kwc">predictlda</span> <span class="hl std">=</span> <span class="hl kwd">predict</span><span class="hl std">(modellda,</span> <span class="hl kwc">newdata</span><span class="hl std">=validation),</span> <span class="hl kwc">classe</span> <span class="hl std">= validation</span><span class="hl opt">$</span><span class="hl std">classe)</span>
+    <span class="hl std">combpred</span> <span class="hl kwb">&lt;-</span> <span class="hl kwd">predict</span><span class="hl std">(combmod, predvalidation)</span>
+    <span class="hl std">cmensemble</span> <span class="hl kwb">&lt;-</span> <span class="hl kwd">confusionMatrix</span><span class="hl std">(combpred, validation</span><span class="hl opt">$</span><span class="hl std">classe)</span>
     <span class="hl kwd">plot</span><span class="hl std">(cmensemble</span><span class="hl opt">$</span><span class="hl std">table,</span> <span class="hl kwc">col</span> <span class="hl std">=</span> <span class="hl num">1</span> <span class="hl opt">+</span> <span class="hl kwd">as.integer</span><span class="hl std">(classes),</span> <span class="hl kwc">main</span> <span class="hl std">=</span> <span class="hl kwd">paste</span><span class="hl std">(</span><span class="hl str">&quot;Ensemble Confusion Matrix: Accuracy=&quot;</span><span class="hl std">,</span> <span class="hl kwd">round</span><span class="hl std">(cmensemble</span><span class="hl opt">$</span><span class="hl std">overall[</span><span class="hl str">'Accuracy'</span><span class="hl std">],</span> <span class="hl num">2</span><span class="hl std">)))</span>
 </pre></div>
 </div><div class="rimage center"><img src="figure/ensemble-1.png" title="plot of chunk ensemble" alt="plot of chunk ensemble" class="plot" /></div><div class="rcode">
@@ -436,58 +430,58 @@ body, td {
 <tbody>
   <tr>
    <td style="text-align:left;"> Class: A </td>
-   <td style="text-align:right;"> 0.90 </td>
-   <td style="text-align:right;"> 0.92 </td>
-   <td style="text-align:right;"> 0.82 </td>
-   <td style="text-align:right;"> 0.96 </td>
+   <td style="text-align:right;"> 0.98 </td>
+   <td style="text-align:right;"> 0.99 </td>
+   <td style="text-align:right;"> 0.98 </td>
+   <td style="text-align:right;"> 0.99 </td>
    <td style="text-align:right;"> 0.28 </td>
-   <td style="text-align:right;"> 0.26 </td>
-   <td style="text-align:right;"> 0.31 </td>
-   <td style="text-align:right;"> 0.91 </td>
+   <td style="text-align:right;"> 0.28 </td>
+   <td style="text-align:right;"> 0.28 </td>
+   <td style="text-align:right;"> 0.99 </td>
   </tr>
   <tr>
    <td style="text-align:left;"> Class: B </td>
-   <td style="text-align:right;"> 0.81 </td>
-   <td style="text-align:right;"> 0.94 </td>
-   <td style="text-align:right;"> 0.75 </td>
    <td style="text-align:right;"> 0.95 </td>
+   <td style="text-align:right;"> 0.98 </td>
+   <td style="text-align:right;"> 0.94 </td>
+   <td style="text-align:right;"> 0.99 </td>
    <td style="text-align:right;"> 0.19 </td>
-   <td style="text-align:right;"> 0.16 </td>
-   <td style="text-align:right;"> 0.21 </td>
-   <td style="text-align:right;"> 0.87 </td>
+   <td style="text-align:right;"> 0.18 </td>
+   <td style="text-align:right;"> 0.20 </td>
+   <td style="text-align:right;"> 0.97 </td>
   </tr>
   <tr>
    <td style="text-align:left;"> Class: C </td>
-   <td style="text-align:right;"> 0.81 </td>
-   <td style="text-align:right;"> 0.93 </td>
-   <td style="text-align:right;"> 0.71 </td>
    <td style="text-align:right;"> 0.96 </td>
+   <td style="text-align:right;"> 0.99 </td>
+   <td style="text-align:right;"> 0.93 </td>
+   <td style="text-align:right;"> 0.99 </td>
    <td style="text-align:right;"> 0.17 </td>
-   <td style="text-align:right;"> 0.14 </td>
-   <td style="text-align:right;"> 0.20 </td>
-   <td style="text-align:right;"> 0.87 </td>
+   <td style="text-align:right;"> 0.17 </td>
+   <td style="text-align:right;"> 0.18 </td>
+   <td style="text-align:right;"> 0.97 </td>
   </tr>
   <tr>
    <td style="text-align:left;"> Class: D </td>
-   <td style="text-align:right;"> 0.85 </td>
-   <td style="text-align:right;"> 0.98 </td>
-   <td style="text-align:right;"> 0.87 </td>
+   <td style="text-align:right;"> 0.95 </td>
+   <td style="text-align:right;"> 0.99 </td>
    <td style="text-align:right;"> 0.97 </td>
+   <td style="text-align:right;"> 0.99 </td>
    <td style="text-align:right;"> 0.16 </td>
-   <td style="text-align:right;"> 0.14 </td>
    <td style="text-align:right;"> 0.16 </td>
-   <td style="text-align:right;"> 0.91 </td>
+   <td style="text-align:right;"> 0.16 </td>
+   <td style="text-align:right;"> 0.97 </td>
   </tr>
   <tr>
    <td style="text-align:left;"> Class: E </td>
-   <td style="text-align:right;"> 0.67 </td>
+   <td style="text-align:right;"> 0.97 </td>
    <td style="text-align:right;"> 1.00 </td>
-   <td style="text-align:right;"> 1.00 </td>
-   <td style="text-align:right;"> 0.93 </td>
+   <td style="text-align:right;"> 0.99 </td>
+   <td style="text-align:right;"> 0.99 </td>
    <td style="text-align:right;"> 0.18 </td>
-   <td style="text-align:right;"> 0.12 </td>
-   <td style="text-align:right;"> 0.12 </td>
-   <td style="text-align:right;"> 0.83 </td>
+   <td style="text-align:right;"> 0.18 </td>
+   <td style="text-align:right;"> 0.18 </td>
+   <td style="text-align:right;"> 0.98 </td>
   </tr>
 </tbody>
 </table>

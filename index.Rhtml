@@ -114,17 +114,11 @@ body, td {
   Moving on we decided to build an ensemble of the first three classifiers with voting to see if it further improves the accuracy. The following R code shows a simple attempt at voting of classifiers. Unfortunately the accuracy was 81%, much lower than that of GBM.
   </p>
 <!--begin.rcode ensemble, message=FALSE, fig.align='center', results='asis'
-    models <- list(modeltree, modellda, modelgbm)
-    predictions <- as.data.frame(do.call(cbind, lapply(models, FUN = function(model) {
-      return(as.character(predict(model, newdata=validation)))
-    })))
-    colnames(predictions) <- c("predicttree", "predictlda", "predictgbm")
-    predictensemble <- apply(predictions, MARGIN = 1, FUN = function(x) {
-        t <- table(t(x))
-	      t.max <- max(t)
-	      return(as.character(names(t[t == t.max])[1]))
-    })
-    cmensemble <- confusionMatrix(predictensemble, validation$classe)
+    predtest <- data.frame(predicttree, predictgbm, predictlda, classe = testing$classe)
+    combmod <- train(classe ~ ., data = predtest, method = "rf")
+    predvalidation <- data.frame(predicttree = predict(modeltree, newdata=validation), predictgbm = predict(modelgbm, newdata=validation), predictlda = predict(modellda, newdata=validation), classe = validation$classe)
+    combpred <- predict(combmod, predvalidation)
+    cmensemble <- confusionMatrix(combpred, validation$classe)
     plot(cmensemble$table, col = 1 + as.integer(classes), main = paste("Ensemble Confusion Matrix: Accuracy=", round(cmensemble$overall['Accuracy'], 2)))
     kable(cmensemble$byClass, digits = 2, caption = "Per Class Metrics")
     end.rcode-->
